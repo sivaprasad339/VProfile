@@ -17,7 +17,7 @@ pipeline {
         }
     }
 
-          stage('deployment stage') {
+          stage('mvn install stage') {
               steps {
                 sh "mvn install"
         }
