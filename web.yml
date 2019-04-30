@@ -1,0 +1,41 @@
+---
+
+- hosts: web
+  become: yes
+  gather_facts: False
+  vars:
+#    date: "{{ lookup('pipe', 'date +%Y-%m-%d-%H:%M') }}"
+    date: "{{ lookup('pipe', 'date +%d-%m-%Y') }}"
+  tasks:
+
+
+
+  - name: copy file from jenkins job to tomcat
+    copy: src=/var/lib/jenkins/workspace/Sample-job/target/vprofile-v1.war dest=/tmp/ mode=644
+
+  - name: Kill the tomcat process
+    shell: kill -9  $(netstat -nltp| grep 8080 | awk '{print $NF}' | cut -d'/' -f1)
+    register: result
+
+  - debug:
+       var: result
+
+
+  - name: copy vprofile-v1.war from webapps to /webapps/vprofile-v1.war-old
+    shell: cp /opt/apache-tomcat-9.0.19/webapps/vprofile-v1.war /opt/apache-tomcat-9.0.19/webapps/vprofile-v1.war-old
+
+  - name: remove vprofile from webapps
+    file:
+      path: /opt/apache-tomcat-9.0.19/webapps/vprofile-v1
+      state: absent
+      
+  - name: copy artifact to tomcat webapps
+    shell: cp /tmp/vprofile-v1.war /opt/apache-tomcat-9.0.19/webapps/vprofile-v1.war
+    
+  - name: Run Tomcat
+    command: nohup /opt/apache-tomcat-9.0.19/bin/startup.sh
+    register: result
+
+  - debug:
+       var: result
+
